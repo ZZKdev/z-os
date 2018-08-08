@@ -75,7 +75,7 @@ next:
 	jb readloop		; ch < cyls 跳转到readloop
 
 ; 跳转到os
-
+	mov [0x0ff0], ch	;记录读取的柱面数
 	jmp 0xc200
 
 
