@@ -74,10 +74,11 @@ next:
 	cmp ch, cyls
 	jb readloop		; ch < cyls 跳转到readloop
 
+; 跳转到os
 
-fin:
-	hlt				;让CPU待机，等待指令
-	jmp	fin			;无限循环
+	jmp 0xc200
+
+
 
 error:
 	mov si, msg
@@ -91,6 +92,10 @@ putloop:
 	mov bx, 15		;指定字符颜色
 	int 0x10		;调用显卡bios
 	jmp	putloop
+
+fin:
+	hlt				;让CPU待机，等待指令
+	jmp	fin			;无限循环
 
 msg:
 	db	0x0a, 0x0a

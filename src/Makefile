@@ -14,26 +14,28 @@ default :
 ipl.bin : ipl.s Makefile
 	$(NASK) ipl.s ipl.bin ipl.lst
 
-helloos.img : ipl.bin Makefile
-	$(EDIMG) imgin:../z_tools/fdimg0at.tek wbinimg src:ipl.bin len:512 from:0 to:0 imgout:helloos.img
+os.bin : os.s Makefile
+	$(NASK) os.s os.bin os.lst
+
+os.img : ipl.bin os.bin Makefile
+	$(EDIMG) imgin:../z_tools/fdimg0at.tek wbinimg src:ipl.bin len:512 from:0 to:0 copy from:os.bin to:@: imgout:os.img
 
 # 其他指令
 
-asm : 
-	$(MAKE) -r ipl.bin
-
 img : 
-	$(MAKE) -r helloos.img
+	$(MAKE) -r os.img
 
 run :
 	$(MAKE) img
-	$(COPY) helloos.img ..\z_tools\qemu\fdimage0.bin
+	$(COPY) os.img ..\z_tools\qemu\fdimage0.bin
 	$(MAKE) -C ../z_tools/qemu
 
 clean :
 	-$(DEL) ipl.bin
 	-$(DEL) ipl.lst
+	-$(DEL) os.bin
+	-$(DEL) os.lst
 
 src_only :
 	$(MAKE) clean
-	-$(DEL) helloos.img
+	-$(DEL) os.img
