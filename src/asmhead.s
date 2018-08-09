@@ -49,7 +49,7 @@ mov     [leds], al
     call waitkbdout
 
 ;保护模式转换
-    [instrest "i486p"]  ;说明使用486指令
+    [instrset "i486p"]  ;说明使用486指令
     lgdt [gdtr0]        ;设置临时GDT
     mov  eax, cr0
     and  eax, 0x7fffffff;使用bit31（禁用分页）
