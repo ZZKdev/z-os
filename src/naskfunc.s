@@ -2,7 +2,7 @@
 ; TAB=4
 
 [FORMAT "WCOFF"]    ;制作目标文件的模式
-[INSTRSET "i486"]
+[INSTRSET "i486p"]
 [BITS 32]           ;制作32位模式用的机器语言
 
 ;制作目标文件的信息
@@ -11,6 +11,8 @@
     GLOBAL _io_in8, _io_in16, _io_in32
     GLOBAL _io_out8, _io_out16, _io_out32
     GLOBAL _io_load_eflags, _io_store_eflags
+    GLOBAL _load_gdtr, _load_idtr
+
 ;以下是实际函数
 [SECTION .text] ;目标文件写了这些后再写程序
 
@@ -76,3 +78,16 @@ _io_store_eflags:   ; void io_store_eflags(int eflags);
         push eax
         popfd
         ret
+
+_load_gdtr:    ; void load_gdtr(int limit, int addr);
+        mov ax, [esp+4]
+        mov [esp+6], ax
+        LGDT [esp+6]
+        ret
+
+_load_idtr:     ; void load_idtr(int limit, int addr);
+        mov ax, [esp+4]
+        mov [esp+6], ax
+        LIDT [esp+6]
+        ret
+        
