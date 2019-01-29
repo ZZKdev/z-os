@@ -13,3 +13,21 @@ run: bootsect.o
 
 clean: 
 	@rm *.o
+
+gen-docker: Dockerfile
+	docker build -t osdocker .
+
+docker-make: 
+	docker run \
+		--rm \
+		--volume $(PWD):/home/ \
+		osdocker \
+		make bootsect.o -C /home/
+
+docker-run:
+	docker run \
+		--rm \
+		-it \
+		--volume $(PWD):/home/ \
+		osdocker \
+		$(QEMU) -boot a -fda /home/bootsect.o -display curses 

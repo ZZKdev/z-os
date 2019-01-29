@@ -1,7 +1,7 @@
 # 这是一个正在编写中的操作系统
 
 make run 即可运行
-> 需要qemu-system-i386
+> 需要qemu-system-i386 make工具
 
 # 学习资源
 
@@ -22,3 +22,5 @@ make run 即可运行
 [《30天自制操作系统》源码中文版。自己制作一个操作系统（OSASK）的过程](https://github.com/yourtion/30dayMakeOS)
 
 [Linux 内核解密](https://github.com/MintCN/linux-insides-zh)
+
+[](http://www.osdever.net/bkerndev/Docs/intro.htm)

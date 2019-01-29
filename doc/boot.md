@@ -6,7 +6,9 @@
 cs 0xf000
 ip 0xfff0
 ```
-经过计算得到的物理地址为(0xf000 << 4 + 0xfff0) = 0xffff0.
+经过计算得到的物理地址为(0xf000 << 4 + 0xfff0) = 0xffff0. 这个地址让人很费解，因为计算机一开始是处于16位实模式下的，而16位实模式的最大寻址空间为1M也就是0xffff。
+
+那cpu是如何处理这个地址的呢?答案是cpu把这个地址映射到了主板上的BIOS程序！
 
 现在BIOS程序进行硬件自检并在内存中加载中断向量表和中断服务程序。检测可引导的设备，将引导扇区的512个字节加载到内存上的0x7c00地址处。将控制权交到下一阶段的启动程序，也就是将cs:ip指向0x7c00处
 
@@ -29,3 +31,7 @@ bootsect: bootsect.s
 run: bootsect
     qemu-system-i386 -boot a -fda bootsect
 ```
+
+
+## int0x13 加载
+[](https://en.wikipedia.org/wiki/INT_13H)
