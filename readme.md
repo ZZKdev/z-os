@@ -3,6 +3,10 @@
 make run 即可运行
 > 需要qemu-system-i386 make工具
 
+
+make docker-make 在docker中构建
+make docker-run 在docker中运行(alt+2, quit)退出
+
 # 学习资源
 
 [os-tutorial](https://github.com/cfenollosa/os-tutorial)
