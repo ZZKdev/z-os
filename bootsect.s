@@ -5,29 +5,34 @@
 ljmp $BOOTSEG, $_start
 
 _start:
-    # https://zh.wikipedia.org/wiki/INT_10H 查看中断
-    # 先获取光标位置
-    mov $0x03, %ah      # 获取行和列到DH和DL寄存器
-    mov $0x00, %bh      # bh寄存器是待待获取光标的页号
-    int $0x10
+    mov $0xb800, %ax
+    mov %ax, %gs
+    movb $'H', %gs:0
+    movb $0xa4, %gs:1   
+    movb $'e', %gs:2
+    movb $0xa4, %gs:3   
+    movb $'l', %gs:4
+    movb $0xa4, %gs:5   
+    movb $'l', %gs:6
+    movb $0xa4, %gs:7   
+    movb $'o', %gs:8
+    movb $0xa4, %gs:9   
+    movb $' ', %gs:10
+    movb $0xa4, %gs:11   
+    movb $'w', %gs:12
+    movb $0xa4, %gs:13   
+    movb $'o', %gs:14
+    movb $0xa4, %gs:15   
+    movb $'r', %gs:16
+    movb $0xa4, %gs:17   
+    movb $'l', %gs:18
+    movb $0xa4, %gs:19   
+    movb $'d', %gs:20
+    movb $0xa4, %gs:21   
 
-    # 打印hello world
-    mov $BOOTSEG, %ax
-    mov %ax, %es        # 将es:bp指向要打印的字符串
-    mov $_msg, %bp
-
-    mov $0x0e, %cx      # 设置要打印的字符个数
-    mov $0x00, %bh      # 设置页码
-    mov $0x0e, %bl      # 设置字符颜色和背景　黑色背景黄色字体
-    mov $0x01, %al      # 设置显示模式　0x01 40*25 16色文本
-    mov $0x13, %ah      # 设置写字符串的模式
-    int $0x10
 forerver:
     hlt
 
-_msg: 
-    .ascii "hello world!\r\n"
-    
 
 .=0x1fe                 # 用0填充字节到0x1fe位置 
 boot_flag:
