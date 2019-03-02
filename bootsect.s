@@ -6,12 +6,15 @@ ljmp $BOOTSEG, $_start
 
 _start:
     # https://zh.wikipedia.org/wiki/INT_10H 查看中断
+    # 先获取光标位置
+    mov $0x03, %ah      # 获取行和列到DH和DL寄存器
+    mov $0x00, %bh      # bh寄存器是待待获取光标的页号
+    int $0x10
+
+    # 打印hello world
     mov $BOOTSEG, %ax
     mov %ax, %es        # 将es:bp指向要打印的字符串
     mov $_msg, %bp
-
-    mov $0x03, %ah      # 获取行和列到DH和DL寄存器
-    int $0x10
 
     mov $0x0e, %cx      # 设置要打印的字符个数
     mov $0x00, %bh      # 设置页码
