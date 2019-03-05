@@ -38,7 +38,7 @@ load_setup:
     mov $LOADER_BASE_ADDR, %dx
     mov %dx, %ds
     mov $0, %bx
-    mov $1, %cx
+    mov $4, %cx
     call read_disk_16
     ljmp $LOADER_BASE_ADDR, $0
 
@@ -58,7 +58,7 @@ read_disk_16:
     mov $8, %cl             # 设置右移位数
 
     shr %cl, %eax
-    mov $0x1f3, %dx
+    mov $0x1f4, %dx
     out %al, %dx            # 8-15 位LBA地址
     
     shr %cl, %eax
@@ -71,7 +71,7 @@ read_disk_16:
     mov $0x1f6, %dx
     out %al, %dx            # device 寄存器
     # 设置要读取的扇区数
-    mov %ax, %dx
+    mov %di, %ax
     mov $0x1f2, %dx
     out %al, %dx
 
