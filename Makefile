@@ -9,9 +9,14 @@ bootsect.o: bootsect.s
 	$(AS) --32 -o bootsect.o bootsect.s
 	$(OBJCOPY) -j .text -O binary bootsect.o
 
-kernel.img: bootsect.o
+loader.o: loader.s
+	$(AS) --32 loader.s -o loader.o
+	$(OBJCOPY) -j .text -O binary loader.o
+
+kernel.img: bootsect.o loader.o
 	bximage -hd=60M -mode=create -q kernel.img 
 	dd if=bootsect.o of=kernel.img bs=512 count=1 conv=notrunc
+	dd if=loader.o of=kernel.img bs=512 count=2 conv=notrunc seek=2
 
 run: kernel.img
 	$(QEMU) -boot c -hda kernel.img
