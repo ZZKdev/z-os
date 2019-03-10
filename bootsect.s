@@ -6,8 +6,13 @@
 ljmp $BOOTSEG, $_start
 
 _start:
+    # 设置一些寄存器的值
+    mov %cs, %ax
+    mov %ax, %ss
+    mov $0, %esp
     mov $0xb800, %ax
     mov %ax, %gs
+    # 随便打印点东西
     movb $'H', %gs:0
     movb $0xa4, %gs:1   
     movb $'e', %gs:2
@@ -38,7 +43,7 @@ load_setup:
     mov $LOADER_BASE_ADDR, %dx
     mov %dx, %ds
     mov $0, %bx
-    mov $4, %cx
+    mov $20, %cx
     call read_disk_16
     ljmp $LOADER_BASE_ADDR, $0
 

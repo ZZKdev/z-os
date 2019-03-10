@@ -16,13 +16,13 @@ loader.o: loader.s
 kernel.img: bootsect.o loader.o
 	bximage -hd=60M -mode=create -q kernel.img 
 	dd if=bootsect.o of=kernel.img bs=512 count=1 conv=notrunc
-	dd if=loader.o of=kernel.img bs=512 count=2 conv=notrunc seek=2
+	dd if=loader.o of=kernel.img bs=512 count=20 conv=notrunc seek=2
 
 run: kernel.img
 	$(QEMU) -boot c -hda kernel.img
 
 clean: 
-	@rm *.o *.img *.out
+	-@rm *.o *.img *.out 2>/dev/null
 
 
 # bochs
