@@ -80,19 +80,36 @@ go_protect:
     or  $0x01, %eax
     mov %eax, %cr0
 
+    # 远跳转刷新流水线
     ljmp $SELECTOR_CODE, $p_mode_start + LOADER_BASE_ADDR << 4
 #--------------------------------------------------------------------------------------------
 
 .code32
+#--------------------------------------------------------------------------------------------
+# 初始化保护模式下的段寄存器
+#--------------------------------------------------------------------------------------------
 p_mode_start:
     mov $SELECTOR_DATA, %ax
     mov %ax, %ds
+    mov %ax, %es
     mov %ax, %ss
     mov $LOADER_STACK_TOP << 4, %esp
     mov $SELECTOR_VIDEO, %ax
     mov %ax, %gs
     movb $'1', %gs:0
     movb $0xa4, %gs:1
+#--------------------------------------------------------------------------------------------
+
+#--------------------------------------------------------------------------------------------
+# 读取内核
+#--------------------------------------------------------------------------------------------
+     mov $KERNEL_START_SECTOR, %eax
+     mov $KERNEL_BIN_BASE_ADDR, %ebx
+     mov $200, %ecx
+     call read_disk_32
+#--------------------------------------------------------------------------------------------
+
+
 
 
 #--------------------------------------------------------------------------------------------
@@ -125,14 +142,32 @@ p_mode_start:
     lgdt gdt_ptr + LOADER_BASE_ADDR << 4
     # 验证一下随便打点东西
     movb $'z', %gs:0
+#--------------------------------------------------------------------------------------------
+    
+
+
+
+#--------------------------------------------------------------------------------------------
+# 进入内核开始工作
+#--------------------------------------------------------------------------------------------
+enter_kernel:
+    call kernel_init
+    mov $KERNEL_ENTRY_POINT, %esp
+    mov $0xc0001500, %eax
+    jmp %eax
     jmp .
+    jmp .
+#--------------------------------------------------------------------------------------------
 
 
-# function 设置页表
-# 把页目录的空间置0
+#--------------------------------------------------------------------------------------------
+# function 
+# 设置页表
+#--------------------------------------------------------------------------------------------
 setup_page:
     mov $4096, %ecx
     mov $0, %esi
+# 把页目录的空间置0
 clear_page_dir:
     movb $0, PAGE_DIR_TABLE_POS(%esi) 
     inc %esi
@@ -171,4 +206,119 @@ create_kernel_pde:
     add $4096, %eax
     loop create_kernel_pde
     ret
+#--------------------------------------------------------------------------------------------
+
+
+#--------------------------------------------------------------------------------------------
+# function
+# 内核初始化, 将elf格式的内核解析后放到合适位置 
+#--------------------------------------------------------------------------------------------
+kernel_init:
+    xor %eax, %eax
+    xor %ebx, %ebx                              # 记录程序头表地址
+    xor %ecx, %ecx                              # 记录 program header 数量
+    xor %edx, %edx                              # 记录一个 program header 的大小
+    mov KERNEL_BIN_BASE_ADDR + 42, %dx          # e_phentsize program header 条目大小
+
+    mov KERNEL_BIN_BASE_ADDR + 28, %ebx         # e_phoff     program header 在文件中的偏移量
+    add $KERNEL_BIN_BASE_ADDR, %ebx
+
+    mov KERNEL_BIN_BASE_ADDR + 44, %cx          # e_phnum     program header 的数量
+# 遍历每一个program header
+each_segment:
+    cmpb $PT_NULL, (%ebx)
+    je PTNULL
+    
+    pushl 16(%ebx)                              # p_filesz    段的大小
+    
+    mov 4(%ebx), %eax                           # p_offset    段的偏移
+    add $KERNEL_BIN_BASE_ADDR, %eax                    
+    push %eax
+    
+    pushl 8(%ebx)                               # p_vaddr     段要加载到的虚拟地址
+    call mem_cpy
+    add $12, %esp
+PTNULL:
+    add %edx, %ebx
+    loop each_segment
+    ret
+    
+# 三个参数 dst, src, size 从右到左入栈
+mem_cpy:
+    cld
+    push %ebp
+    mov %esp, %ebp
+    push %ecx
+    
+    mov 8(%ebp), %edi   # dst
+    mov 12(%ebp), %esi  # src
+    mov 16(%ebp), %ecx  # size
+    rep movsb
+    
+    pop %ecx
+    pop %ebp
+    ret
+#--------------------------------------------------------------------------------------------
+
+
+#--------------------------------------------------------------------------------------------
+# function
+# 从硬盘读取n个扇区
+# eax = LBA 扇区号
+# ds:ebx = 将数据写入的内存地址
+# cx = 读入的扇区数
+#--------------------------------------------------------------------------------------------
+read_disk_32:
+    mov %cx, %di
+    # 设置要读取的LBA起始地址
+    mov $0x1f3, %dx         # 0 - 7 位LBA地址
+    out %al, %dx
+    
+    mov $8, %cx
+    shr %cl, %eax
+    mov $0x1f4, %dx         # 8 - 15 位LBA地址
+    out %al, %dx
+    
+    shr %cl, %eax
+    mov $0x1f5, %dx
+    out %al, %dx            # 16 - 23 位LBA地址
+    
+    shr %cl, %eax           # 低4位为 24 - 27 位LBA地址
+    and $0x0f, %al          # 高4位置0
+    or  $0xe0, %al          # 高4为置为 1110, LBA寻址模式, 主盘
+    mov $0x1f6, %dx
+    out %al, %dx            # device 寄存器
+    
+    # 设置要读取的扇区数
+    mov %di, %ax
+    mov $0x1f2, %dx
+    out %al, %dx
+    
+    # 往 command 寄存器发送命令
+    mov $0x20, %al
+    mov $0x1f7, %dx
+    out %al, %dx
+
+    # 检测硬盘状态
+    mov $0x1f7, %dx
+not_ready:
+    nop                     # 不操作延迟一下
+    in %dx, %al
+    and $0x88, %al          # 保留第3和7位, DRQ位(硬盘是否准备号数据), BSY位(硬盘是否正忙)
+    cmp $0x08, %al          # 检查DRQ位是否为1, BSY位是否为0
+    jnz not_ready
+   
+    # 从0x1f0 中读数据
+    mov %di, %ax
+    mov $256, %dx
+    mul %dx
+    mov %ax, %cx
+    mov $0x1f0, %dx
+read_next:
+    in %dx, %ax
+    mov %ax, (%ebx)
+    add $2, %ebx
+    loop read_next
+    ret
+    
 #--------------------------------------------------------------------------------------------
