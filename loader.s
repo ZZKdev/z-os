@@ -154,7 +154,7 @@ enter_kernel:
     call kernel_init
     mov $KERNEL_ENTRY_POINT, %esp
     mov $0xc0001500, %eax
-    jmp %eax
+    jmp *%eax
     jmp .
     jmp .
 #--------------------------------------------------------------------------------------------
