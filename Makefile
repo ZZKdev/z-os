@@ -2,11 +2,12 @@ AS=as
 OBJCOPY=objcopy
 QEMU=qemu-system-i386
 BOCHS=bochs
+CC=gcc
 
 
 
-bootsect.o: bootsect.s
-	$(AS) --32 -o bootsect.o bootsect.s
+bootsect.o: bootsect.S
+	$(CC) -m32 -c -o bootsect.o bootsect.S
 	$(OBJCOPY) -j .text -O binary bootsect.o
 
 loader.o: loader.s

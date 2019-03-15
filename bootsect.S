@@ -1,4 +1,4 @@
-.include "boot.inc"
+#include "boot.h"
 .code16
 .equ BOOTSEG, 0x07c0
 
