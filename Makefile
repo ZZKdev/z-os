@@ -7,11 +7,11 @@ CC=gcc
 
 
 bootsect.o: bootsect.S
-	$(CC) -m32 -c -o bootsect.o bootsect.S
+	$(CC) -m32 -c bootsect.S -o bootsect.o
 	$(OBJCOPY) -j .text -O binary bootsect.o
 
-loader.o: loader.s
-	$(AS) --32 loader.s -o loader.o
+loader.o: loader.S
+	$(CC) -m32 -c loader.S -o loader.o
 	$(OBJCOPY) -j .text -O binary loader.o
 
 kernel.img: bootsect.o loader.o kernel.bin

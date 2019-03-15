@@ -1,3 +1,4 @@
+#include "boot.h"
 .include "boot.inc"
 .code16
 .equ LOADER_STACK_TOP, LOADER_BASE_ADDR
@@ -6,20 +7,18 @@ jmp go_protect
 # 构建 gdt 描述符
 #--------------------------------------------------------------------------------------------
 GDT_BASE: 
-    .long 0x00000000
-    .long 0x00000000
+    SEGMENT_NULL
 GDT_DES:
-    .long 0x0000FFFF
-    .long DESC_CODE_HIGH4
+    SEGMENT_DEFINE(SEG_X, 0, 0xffffffff)
 DATA_STACK_DESC: 
-    .long 0x0000FFFF
-    .long DESC_DATA_HIGH4            
+    SEGMENT_DEFINE(SEG_W, 0, 0xffffffff)
 VIDEO_DESC:
-    .long 0x80000007
-    .long DESC_VIDEO_HIGH4
+    SEGMENT_DEFINE(SEG_W, 0xb8000, 0x7fff)
 
 .equ GDT_SIZE, .-GDT_BASE
 .equ GDT_LIMIT, GDT_SIZE-1
+
+# 预留的段描述符
 .rept 60 .quad 0
 .endr
 
