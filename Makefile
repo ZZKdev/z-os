@@ -4,31 +4,37 @@ QEMU=qemu-system-i386
 BOCHS=bochs
 CC=gcc
 
+.PHONY: clean bochs-run
 
 
-bootsect.o: bootsect.S
-	$(CC) -m32 -c bootsect.S -o bootsect.o
-	$(OBJCOPY) -j .text -O binary bootsect.o
+obj/%.o: boot/%.S
+	@if [ ! -d obj ]; then mkdir -p obj; fi
+	$(CC) -m32 -c -Iboot/ $< -o obj/$*.o
+	$(OBJCOPY) -j .text -O binary obj/$*.o
 
-loader.o: loader.S
-	$(CC) -m32 -c loader.S -o loader.o
-	$(OBJCOPY) -j .text -O binary loader.o
+# bootsect.o: boot/bootsect.S
+# 	$(CC) -m32 -c boot/bootsect.S -o obj/bootsect.o
+# 	$(OBJCOPY) -j .text -O binary obj/bootsect.o
+# 
+# loader.o: boot/loader.S
+# 	$(CC) -m32 -c boot/loader.S -o obj/loader.o
+# 	$(OBJCOPY) -j .text -O binary obj/loader.o
 
-kernel.img: bootsect.o loader.o kernel.bin
+kernel.img: obj/bootsect.o obj/loader.o obj/init.bin
 	bximage -hd=60M -mode=create -q kernel.img 
-	dd if=bootsect.o of=kernel.img bs=512 count=1 conv=notrunc
-	dd if=loader.o of=kernel.img bs=512 count=20 conv=notrunc seek=2
-	dd if=kernel.bin of=kernel.img bs=512 count=100 conv=notrunc seek=9
+	dd if=obj/bootsect.o of=kernel.img bs=512 count=1 conv=notrunc
+	dd if=obj/loader.o of=kernel.img bs=512 count=20 conv=notrunc seek=2
+	dd if=obj/init.bin of=kernel.img bs=512 count=100 conv=notrunc seek=9
 
-kernel.bin: kernel.c
-	gcc -m32 kernel.c -c -o kernel.o
-	ld -m elf_i386 kernel.o -T lds -e main -o kernel.bin -Ttext 0xc0001500
+obj/init.bin: kern/init/init.c
+	gcc -m32 $< -c -o obj/init.o
+	ld -m elf_i386 obj/init.o -T lds -e main -o obj/init.bin -Ttext 0xc0001500
 
 run: kernel.img
 	$(QEMU) -boot c -hda kernel.img
 
 clean: 
-	-@rm *.o *.img *.out *.bin 2>/dev/null
+	-@rm -f -r obj bochs.out kernel.img
 
 
 # bochs
