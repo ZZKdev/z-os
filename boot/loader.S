@@ -2,6 +2,7 @@
 .include "boot.inc"
 .code16
 .equ LOADER_STACK_TOP, LOADER_BASE_ADDR
+.equ CR0_PE_ON, 0x01
 jmp go_protect
 #--------------------------------------------------------------------------------------------
 # 构建 gdt 描述符
@@ -76,7 +77,7 @@ go_protect:
     lgdt gdt_ptr
     # 将cr0寄存器pe位置为1
     mov %cr0, %eax
-    or  $0x01, %eax
+    or  $CR0_PE_ON, %eax
     mov %eax, %cr0
 
     # 远跳转刷新流水线
